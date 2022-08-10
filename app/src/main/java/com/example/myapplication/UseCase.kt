@@ -1,20 +1,21 @@
 package com.example.myapplication
 
+import android.content.Context
 import androidx.annotation.WorkerThread
 import kotlinx.coroutines.flow.*
 import java.util.*
 
 //todo think of an appropriate name
-open class UseCase (var sdr: WebSDRUSeCase, var yandexTranslateUseCase: YandexTranslateUseCase) {
+open class UseCase (var sdr: WebSDRUSeCase, var yandexTranslateUseCase: YandexTranslateUseCase, var context: Context) {
     var lastMax = 1f
     var avg = 0f
     @Synchronized
     suspend open fun invoke(): Signal {
         return sdr.getMorningData(846000f).run {
-            val outputSignal = Signal()
-            val realNumbers: List<Float> = this.map { it.first }
-            val imaginaryNumbers: List<Float> = this.map { it.second }
-            val resultSignal: MutableList<Float> = LinkedList<Float>(realNumbers)
+            var outputSignal = Signal()
+            var realNumbers: List<Float> = this.map { it.first }
+            var imaginaryNumbers: List<Float> = this.map { it.second }
+            var resultSignal = LinkedList(realNumbers)
             for (i in 0 until this.size) {
                 lastMax *= 0.95f
                 resultSignal[i] = realNumbers[i] * realNumbers[i] + imaginaryNumbers[i] * imaginaryNumbers[i]
@@ -31,23 +32,25 @@ open class UseCase (var sdr: WebSDRUSeCase, var yandexTranslateUseCase: YandexTr
                 }
                 .flattenConcat()
                 .toList()
-            outputSignal.sampleRate = Const.QUADRATURE_RATE
+            outputSignal.sampleRate = QUADRATURE_RATE
             outputSignal.signal = signal
             return outputSignal.apply {
-                val amplified = ArrayList(this.signal)
+                var amplified = LinkedList(this.signal)
                 for (i in 0 until this.signal.size) {
                     amplified[i] = this.signal[i]*10_000
                 }
                 this.signal = amplified
-                yandexTranslateUseCase.translate(this, Locale.CHINESE, Locale("ru","RU"))
+                yandexTranslateUseCase.translate(this, Locale.CHINESE, Locale(context.getString(R.string.target_locale_small),context.getString(R.string.target_locale_big)))
             }
         }
+    }
+    companion object {
+        var QUADRATURE_RATE =  2* Const.MIDI_RATE // AM
     }
 }
 
 object Const {
     var MIDI_RATE = 31250f
-    var QUADRATURE_RATE =  2*MIDI_RATE // AM
 }
 
 class Signal {

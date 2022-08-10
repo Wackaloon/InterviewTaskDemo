@@ -1,23 +1,52 @@
 package com.example.myapplication
 
+import android.content.Context
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertArrayEquals
 import org.junit.Test
-
-import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import java.util.*
 
+@RunWith(MockitoJUnitRunner::class)
 class ExampleUnitTest {
-    val useCase = UseCase(WebSDRUSeCaseTestImpl(), YandexTranslateUseCaseTestImpl())
 
     @Test
     fun sdrWorks() = runTest {
+        val mockContext = mock<Context> {
+            on { getString(R.string.target_locale_small) } doReturn "ru"
+            on { getString(R.string.target_locale_big) } doReturn "RU"
+        }
+        val useCase =
+            UseCase(WebSDRUSeCaseTestImpl(), YandexTranslateUseCaseTestImpl(), mockContext)
         val result = useCase.invoke()
         assertArrayEquals(expected, result.signal.toFloatArray(), 0.00000001f)
     }
 
     companion object {
         val expected = arrayListOf(
-            4.737946, 4.7358956, 4.727019, 4.70315, 4.652905, 4.5617304, 4.4119635, 4.1829076, 3.8509192, 3.38951, 2.769456, 1.9589273, 0.9236189, -0.37309635, -1.9700112, -3.9079204, -6.2294335, -8.978794, -12.201683, -15.945012
+            4.737946,
+            4.7358956,
+            4.727019,
+            4.70315,
+            4.652905,
+            4.5617304,
+            4.4119635,
+            4.1829076,
+            3.8509192,
+            3.38951,
+            2.769456,
+            1.9589273,
+            0.9236189,
+            -0.37309635,
+            -1.9700112,
+            -3.9079204,
+            -6.2294335,
+            -8.978794,
+            -12.201683,
+            -15.945012
         )
             .map {
                 it.toFloat()
@@ -37,12 +66,12 @@ class WebSDRUSeCaseTestImpl : WebSDRUSeCase {
             var car_phase = 0f
             var mod_phase = 0f
             for (i in 0 until 20) {
-                if (car_phase >= 2*Math.PI)
-                    car_phase -= 2*Math.PI.toFloat()
-                if (mod_phase >= 2*Math.PI)
-                    mod_phase -= 2*Math.PI.toFloat()
-                car_phase += fc/31250f
-                mod_phase += fcmodulated/31250f
+                if (car_phase >= 2 * Math.PI)
+                    car_phase -= 2 * Math.PI.toFloat()
+                if (mod_phase >= 2 * Math.PI)
+                    mod_phase -= 2 * Math.PI.toFloat()
+                car_phase += fc / 31250f
+                mod_phase += fcmodulated / 31250f
                 val sinus_carrier = Math.sin(2 * Math.PI * (car_phase))
                 val sinus_am = Math.sin(2 * Math.PI * (mod_phase))
                 val real = (sinus_am * sinus_carrier).toFloat()

@@ -1,6 +1,8 @@
 package com.example.myapplication
 
-class UseCaseWithAnalytics(var analytics: Analytics, sdr: WebSDRUSeCase, yandexTranslateUseCase: YandexTranslateUseCase) : UseCase(sdr, yandexTranslateUseCase) {
+import android.content.Context
+
+class UseCaseWithAnalytics(var analytics: Analytics, sdr: WebSDRUSeCase, yandexTranslateUseCase: YandexTranslateUseCase, context: Context) : UseCase(sdr, yandexTranslateUseCase, context) {
 
     override suspend fun invoke(): Signal {
         analytics.logLogicBeingCalled()
